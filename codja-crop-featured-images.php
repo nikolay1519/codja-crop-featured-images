@@ -437,8 +437,8 @@
 		Codja_Crop_Featured_Images::getInstance();
 	}
 
-	if (!function_exists('get_image_for_object_id')) {
-		function get_image_for_object_id($post_id, $image_size = 'thumbnail') {
+	if (!function_exists('cj_get_image_for_object')) {
+		function cj_get_image_for_object($post_id, $image_size = 'thumbnail') {
 			$post_attachment_id = get_post_thumbnail_id($post_id);
 			$post_crops = get_post_meta($post_id, 'cfi_crops_' . $post_attachment_id, true);
 
