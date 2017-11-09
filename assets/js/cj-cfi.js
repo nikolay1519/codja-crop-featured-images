@@ -23,8 +23,7 @@ jQuery(document).ready(function($) {
             viewMode: 2,
             zoomable: false,
             movable: false,
-            dragMode: 'move',
-
+            dragMode: 'move'
         };
 
         if (size_width != 9999 && size_height != 9999) {
