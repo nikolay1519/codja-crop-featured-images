@@ -253,7 +253,8 @@
 			public function enqueueScripts($hook_suffix) {
 				if ($hook_suffix == 'settings_page_cj-cfi') {
 					if (is_rtl()) {
-						wp_enqueue_style('cj-cfi-styles', CJ_CFI_URL . 'assets/css/cj-cfi-rtl.css', array('wp-jquery-ui-dialog'));
+						wp_enqueue_style('cj-cfi-styles', CJ_CFI_URL . 'assets/css/cj-cfi-rtl.css');
+						wp_enqueue_style('cj-cfi-jquery-ui-dialog', CJ_CFI_URL . 'assets/css/jquery-ui-dialog-rtl.css');
 					} else {
 						wp_enqueue_style('cj-cfi-styles', CJ_CFI_URL . 'assets/css/cj-cfi.css', array('wp-jquery-ui-dialog'));
 					}

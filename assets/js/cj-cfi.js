@@ -9,7 +9,10 @@ jQuery(document).ready(function($) {
         draggable: false,
         resizable: false,
         modal: true,
-        width: 'auto'
+        width: 'auto',
+        open: function( event, ui ) {
+            //viewCropDialog.dialog('option', 'position', { my: "center", at: "center", of: window });
+        }
     });
 
     $('.cj_cfi_image_for_crop').each(function(index, element) {
