@@ -1,6 +1,16 @@
 jQuery(document).ready(function($) {
     var cropsInstances = {};
     var cj_media = false;
+    var cj_loader = $('.cj_cfi_loader');
+    var viewCropDialog = $('#viewCropImageDialog');
+
+    viewCropDialog.dialog({
+        autoOpen: false,
+        draggable: false,
+        resizable: false,
+        modal: true,
+        width: 'auto'
+    });
 
     $('.cj_cfi_image_for_crop').each(function(index, element) {
         var image = $(element),
@@ -13,7 +23,8 @@ jQuery(document).ready(function($) {
             viewMode: 2,
             zoomable: false,
             movable: false,
-            dragMode: 'move'
+            dragMode: 'move',
+
         };
 
         if (size_width != 9999 && size_height != 9999) {
@@ -62,6 +73,8 @@ jQuery(document).ready(function($) {
             size_width = size_box.data('sizeWidth'),
             size_height = size_box.data('sizeHeight');
 
+        showLoader();
+
         var currentCrop = size_box.find('.cj_cfi_size__crop.current img');
 
         if (currentCrop.length > 0) {
@@ -76,6 +89,7 @@ jQuery(document).ready(function($) {
 
             $.post(ajaxurl, sendData, function(data) {
                 console.log(data);
+                hideLoader();
             }, 'json');
         } else {
             cropsInstances[size_id].getCroppedCanvas({
@@ -113,9 +127,12 @@ jQuery(document).ready(function($) {
                         } else {
                             console.log(data);
                         }
+
+                        hideLoader();
                     },
                     error: function () {
                         console.log('Upload error');
+                        hideLoader();
                     }
                 });
             });
@@ -133,6 +150,8 @@ jQuery(document).ready(function($) {
             var crop_id = currentCrop.data('cropId');
 
             if (crop_id != 'default') {
+                showLoader();
+
                 var sendData = {};
 
                 sendData.action = 'cfi_reset_image';
@@ -151,11 +170,11 @@ jQuery(document).ready(function($) {
                         }
 
                         cropsInstances[size_id].reset();
-
-
                     } else {
                         console.log(data);
                     }
+
+                    hideLoader();
                 }, 'json');
             }
         }
@@ -220,8 +239,6 @@ jQuery(document).ready(function($) {
         cj_media.on('select', function() {
             var attachment = cj_media.state().get('selection').first().toJSON();
 
-            //console.log(attachment);
-
             // Change data-attachment-id for size box
             var size_id = cj_media.cj_size_id,
                 size_box = $('#cj_cfi_size_box_' + size_id);
@@ -240,4 +257,57 @@ jQuery(document).ready(function($) {
         cj_media['cj_size_id'] = size_id;
         cj_media.open();
     });
+
+    $('.cj_cfi_button__view_crop').on('click', function() {
+        var button = $(this),
+            size_box = button.closest('.cj_cfi_size_box'),
+            size_id = size_box.data('sizeId');
+
+        var crop_sizes = button.closest('.cj_cfi_size_box__head').find('.cj_cfi_size_box__size_params').text();
+        var crop_title = button.closest('.cj_cfi_size_box__head').find('.cj_cfi_size_box__size_name').text();
+
+        var currentCrop = size_box.find('.cj_cfi_size__crop.current img');
+        if (currentCrop.length > 0) {
+            // If image is cropped, show image
+            viewCropDialog.dialog('option', 'title', cj_cfi.view_crop + ' (' + crop_sizes + ')');
+            viewCropDialog.html('<img src="' + currentCrop.attr('src') + '" />');
+            viewCropDialog.dialog('option', 'position', { my: "center", at: "center", of: window });
+
+            viewCropDialog.dialog('open');
+        } else {
+            // If images is not cropped, show blob
+            var size_width = size_box.data('sizeWidth'),
+                size_height = size_box.data('sizeHeight');
+
+            cropsInstances[size_id].getCroppedCanvas({
+                width: size_width,
+                height: size_height,
+                minWidth: 50,
+                minHeight: 50,
+                fillColor: '#fff',
+                imageSmoothingEnabled: true,
+                imageSmoothingQuality: 'high'
+            }).toBlob(function (blob) {
+                var cropUrl = window.URL.createObjectURL(new Blob([blob]));
+                var img = new Image();
+                img.src = cropUrl;
+                img.onload = function() {
+                    viewCropDialog.dialog('option', 'title', cj_cfi.view_crop + ' (' + crop_sizes + ')');
+                    viewCropDialog.html(img);
+                    viewCropDialog.dialog('option', 'position', { my: "center", at: "center", of: window });
+
+                    viewCropDialog.dialog('open');
+                }
+
+            });
+        }
+    });
+
+    function showLoader() {
+        cj_loader.stop().fadeIn(200);
+    }
+
+    function hideLoader() {
+        cj_loader.stop().fadeOut(200);
+    }
 });

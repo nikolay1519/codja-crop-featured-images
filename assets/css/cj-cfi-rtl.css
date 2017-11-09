@@ -32,7 +32,7 @@
 }
 
 .cj_cfi_size_box__buttons {
-    text-align: right;
+    text-align: left;
     margin: 10px 0 0;
 }
 
@@ -51,9 +51,9 @@ img.cj_cfi_image_for_crop {
 
 .cj_cfi_size__crops {}
 .cj_cfi_size__crop {
-    float: left;
+    float: right;
     width: 80px;
-    margin: 0 10px 10px 0;
+    margin: 0 0 10px 10px;
 }
 
 .cj_cfi_size__crop img {
@@ -77,8 +77,8 @@ img.cj_cfi_image_for_crop {
     display: none;
     position: fixed;
     top: 0;
-    left: 0;
     right: 0;
+    left: 0;
     bottom: 0;
     min-height: 360px;
     background: #000;
@@ -96,14 +96,14 @@ img.cj_cfi_image_for_crop {
     margin: 0 auto;
     position: absolute;
     top: 50%;
-    left: 50%;
+    right: 50%;
     margin-top: -40px;
-    margin-left: -40px;
+    margin-right: -40px;
 }
 
 @keyframes spin {
     0% { transform: rotate(0deg); }
-    100% { transform: rotate(360deg); }
+    100% { transform: rotate(-360deg); }
 }
 
 @media screen and (max-width: 1002px) {

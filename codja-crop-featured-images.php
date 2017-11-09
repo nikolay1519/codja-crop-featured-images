@@ -244,7 +244,7 @@
 				$current_post_thumbnail = get_post_thumbnail_id($post_id);
 				// Add link only if current selected attachment = thumbnail_id of the post
 				if ($thumbnail_id != false && intval($current_post_thumbnail) == $thumbnail_id) {
-					$content .= '<p class="hide-if-no-js"><a href="' . admin_url('options-general.php?page=cj-cfi&post_id=' . $post_id) . '">Crop image</a></p>';
+					$content .= '<p class="hide-if-no-js"><a href="' . admin_url('options-general.php?page=cj-cfi&post_id=' . $post_id) . '" target="_blank">Crop image</a></p>';
 				}
 
 				return $content;
@@ -252,13 +252,23 @@
 
 			public function enqueueScripts($hook_suffix) {
 				if ($hook_suffix == 'settings_page_cj-cfi') {
-					wp_enqueue_style('cj-cfi-styles', CJ_CFI_URL . 'assets/css/cj-cfi.css');
+					if (is_rtl()) {
+						wp_enqueue_style('cj-cfi-styles', CJ_CFI_URL . 'assets/css/cj-cfi-rtl.css', array('wp-jquery-ui-dialog'));
+					} else {
+						wp_enqueue_style('cj-cfi-styles', CJ_CFI_URL . 'assets/css/cj-cfi.css', array('wp-jquery-ui-dialog'));
+					}
+
 					wp_enqueue_style('croppie-styles', CJ_CFI_URL . 'assets/css/cropper.css');
 
 					wp_enqueue_media();
 
 					wp_enqueue_script('cropper-script', 'https://cdnjs.cloudflare.com/ajax/libs/cropperjs/1.1.3/cropper.js', array('jquery'), false);
-					wp_enqueue_script('cj-cfi-script', CJ_CFI_URL . 'assets/js/cj-cfi.js', array('jquery', 'jquery-form', 'cropper-script'), false, true);
+					wp_enqueue_script('cj-cfi-script', CJ_CFI_URL . 'assets/js/cj-cfi.js', array('jquery', 'jquery-form', 'jquery-ui-dialog'), false, true);
+
+					$translation_array = array(
+						'view_crop' => __('View Crop'),
+					);
+					wp_localize_script('cj-cfi-script', 'cj_cfi', $translation_array);
 				}
 			}
 
@@ -286,7 +296,9 @@
 							$edit_post_link = get_edit_post_link( $post_id, '' );
 
 							if ( $attachment_id != false ) {
-								$sizes = wp_get_additional_image_sizes();
+								$sizes = $this->getSizes();
+
+
 								$original_image_src = wp_get_attachment_image_url($attachment_id, 'full');
 								$original_metadata = wp_get_attachment_metadata($attachment_id);
 
@@ -394,6 +406,32 @@
 				}
 
 				return $initial_states;
+			}
+
+			private function getSizes() {
+				$disabled_sizes = apply_filters('cj_cfi_disabled_sizes', array());
+				$size_names = apply_filters('image_size_names_choose', array());
+				$size_names = apply_filters('cj_cfi_set_size_names', $size_names);
+
+				$sizes = wp_get_additional_image_sizes();
+
+				if (!empty($disabled_sizes)) {
+					foreach ($disabled_sizes as $size_id) {
+						if (isset($sizes[$size_id])) {
+							unset($sizes[$size_id]);
+						}
+					}
+				}
+
+				if (!empty($size_names)) {
+					foreach ($size_names as $size_id => $size_name) {
+						if (isset($sizes[$size_id])) {
+							$sizes[$size_id]['title'] = $size_name;
+						}
+					}
+				}
+
+				return $sizes;
 			}
 
 			private function jsonDie($array = array()) {
