@@ -1,0 +1,66 @@
+msgid ""
+msgstr ""
+"Project-Id-Version: CODJA Crop Featured Images 1.0.0\n"
+"POT-Creation-Date: 2017-11-09 09:42+0200\n"
+"PO-Revision-Date: 2017-11-09 09:42+0200\n"
+"Last-Translator: kaliyan <nikolay1519@gmail.com>\n"
+"MIME-Version: 1.0\n"
+"Content-Type: text/plain; charset=UTF-8\n"
+"Content-Transfer-Encoding: 8bit\n"
+
+#: codja-crop-featured-images.php:259 codja-crop-featured-images.php:260
+#: templates/no_post.php:2 templates/no_post_id.php:2
+#: templates/no_thumbnail.php:2 templates/not_support_thumbnails.php:2
+msgid "Crop Featured Images"
+msgstr ""
+
+#: templates/crop_page.php:2
+msgid "Crop image for post ID:"
+msgstr ""
+
+#: templates/crop_page.php:5
+msgid "Original size"
+msgstr ""
+
+#: templates/crop_page.php:6
+msgid "Edit post"
+msgstr ""
+
+#: templates/crop_page.php:18
+msgid "Size:"
+msgstr ""
+
+#: templates/crop_page.php:23
+msgid "Change Image"
+msgstr ""
+
+#: templates/crop_page.php:24
+msgid "Save"
+msgstr ""
+
+#: templates/crop_page.php:25
+msgid "Reset"
+msgstr ""
+
+#: templates/no_post.php:4
+#, php-format
+msgid "Post with ID = %d does not exist. Please, select other Post ID"
+msgstr ""
+
+#: templates/no_post.php:10 templates/no_post_id.php:8
+#: templates/no_thumbnail.php:10 templates/not_support_thumbnails.php:10
+msgid "Post ID for crop his featured image"
+msgstr ""
+
+#: templates/no_post.php:14 templates/no_post_id.php:12
+#: templates/no_thumbnail.php:14 templates/not_support_thumbnails.php:14
+msgid "Go"
+msgstr ""
+
+#: templates/no_thumbnail.php:4
+msgid "This post does not have a thumbnail. You can set it on edit post page:"
+msgstr ""
+
+#: templates/not_support_thumbnails.php:4
+msgid "Selected post not support thumbnail. Please, select other post."
+msgstr ""

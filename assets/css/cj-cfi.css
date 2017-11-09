@@ -1,0 +1,63 @@
+#cjCfi_page,
+#cjCfi_page * {
+    box-sizing: border-box;
+}
+
+#cjCfi_page .clear {}
+#cjCfi_page .clear:before,
+#cjCfi_page .clear:after {
+    content: '';
+    display: table;
+}
+
+#cjCfi_page .clear:after {
+    clear: both;
+}
+
+.cj_cfi_sizes {
+    width: 600px;
+    margin: 20px 0 0;
+}
+
+.cj_cfi_size_box {
+    margin: 0 0 20px;
+}
+
+.cj_cfi_size_box__head {
+    font-size: 18px;
+}
+
+.cj_cfi_size_box__buttons {
+    float: right;
+}
+
+.cj_cfi_size_box__body {
+    margin: 5px 0 20px 0;
+}
+
+img.cj_cfi_image_for_crop {
+    max-width: 100%;
+    height: auto;
+}
+
+.cj_cfi_size__crops {}
+.cj_cfi_size__crop {
+    float: left;
+    width: 80px;
+    margin: 0 10px 10px 0;
+}
+
+.cj_cfi_size__crop img {
+    max-width: 100%;
+    cursor: pointer;
+}
+
+.cj_cfi_size__crop.current img {
+    outline: 3px solid #3499ff;
+}
+
+@media screen and (max-width: 1002px) {
+    .cj_cfi_sizes {
+        width: 100%;
+    }
+}
