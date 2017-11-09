@@ -10,7 +10,9 @@
 		     data-post-id="<?php echo $post_id; ?>"
 		     data-size-width="<?php echo $size['width']; ?>"
 		     data-size-height="<?php echo $size['height']; ?>"
-		     data-attachment-id="<?php echo $initial_states[$name]['attachment_id']; ?>">
+		     data-attachment-id="<?php echo $initial_states[$name]['attachment_id']; ?>"
+		     data-default-attachment-id="<?php echo $attachment_id; ?>"
+		     data-default-image="<?php echo $original_image_src; ?>">
 			<div class="cj_cfi_size_box__head clear">
 				<?php _e('Size:', 'cj-cfi'); ?>
 				<span class="cj_cfi_size_box__size_name"><?php if (isset($size['title'])) echo $size['title']; ?></span>
@@ -33,8 +35,10 @@
 				<div class="cj_cfi_size_box__footer__head"><?php _e('Old crops for that image for other posts (use it to save space)', 'cj-cfi'); ?></div>
 				<div class="cj_cfi_size__crops clear">
 					<?php
-						foreach ($crops_of_attachment[$name] as $crop_id => $crop_data) {
-							require( CJ_CFI_DIR . 'templates/crop.php' );
+						if ($crops_of_attachment[$name] != false) {
+							foreach ($crops_of_attachment[$name] as $crop_id => $crop_data) {
+								require( CJ_CFI_DIR . 'templates/crop.php' );
+							}
 						}
 					?>
 				</div>

@@ -11,7 +11,7 @@ jQuery(document).ready(function($) {
         modal: true,
         width: 'auto',
         open: function( event, ui ) {
-            //viewCropDialog.dialog('option', 'position', { my: "center", at: "center", of: window });
+            viewCropDialog.dialog('option', 'position', { my: "center", at: "center", of: window });
         }
     });
 
@@ -40,32 +40,46 @@ jQuery(document).ready(function($) {
             var currentCrop = size_box.find('.cj_cfi_size__crop.current img');
 
             if (currentCrop.length > 0) {
-                var crop_id = currentCrop.data('cropId');
+                var cropper_data = currentCrop.data('cropperData');
 
-                if (crop_id != 'default') {
-                    var original_image = currentCrop.data('originalImage');
-                    var cropped_image = currentCrop.data('croppedImage');
-                    var cropper_data = currentCrop.data('cropperData');
-
-                    cropsInstances[size_id].setCropBoxData(cropper_data.cropBoxData);
-                    cropsInstances[size_id].setCanvasData(cropper_data.canvasData);
-                }
+                cropsInstances[size_id].setCropBoxData(cropper_data.cropBoxData);
+                cropsInstances[size_id].setCanvasData(cropper_data.canvasData);
             }
-
         });
 
         element.addEventListener('cropstart', function () {
             var size_box = $(this.cropper.cropper).closest('.cj_cfi_size_box');
-
             var currentCrop = size_box.find('.cj_cfi_size__crop.current');
 
             if (currentCrop.length > 0) {
-                currentCrop.addClass('prev');
                 currentCrop.removeClass('current');
             }
         });
     });
 
+    $('.cj_cfi_size__crops').on('click', '.cj_cfi_size__crop img', function() {
+        var _this = $(this),
+            _crops = _this.closest('.cj_cfi_size__crops');
+
+        if (_this.parent().hasClass('current')) return false;
+
+        var size_box = _this.closest('.cj_cfi_size_box'),
+            size_id = size_box.data('sizeId'),
+            crop_id = _this.data('cropId'),
+            original_image = _this.data('originalImage'),
+            cropper_data = _this.data('cropperData');
+
+        if (cropsInstances[size_id].url != original_image) {
+            cropsInstances[size_id].replace(original_image);
+            size_box.data('attachmentId', _this.data('attachmentId'));
+        }
+
+        cropsInstances[size_id].setCropBoxData(cropper_data.cropBoxData);
+        cropsInstances[size_id].setCanvasData(cropper_data.canvasData);
+
+        _crops.find('.current').removeClass('current');
+        _this.parent().addClass('current');
+    });
 
     $('.cj_cfi_button__save').on('click', function() {
         var button = $(this),
@@ -78,7 +92,6 @@ jQuery(document).ready(function($) {
         showLoader();
 
         var currentCrop = size_box.find('.cj_cfi_size__crop.current img');
-
         if (currentCrop.length > 0) {
             var sendData = {};
 
@@ -90,7 +103,6 @@ jQuery(document).ready(function($) {
             sendData.attachment_id = size_box.data('attachmentId');
 
             $.post(ajaxurl, sendData, function(data) {
-                console.log(data);
                 hideLoader();
             }, 'json');
         } else {
@@ -131,10 +143,6 @@ jQuery(document).ready(function($) {
                         }
 
                         hideLoader();
-                    },
-                    error: function () {
-                        console.log('Upload error');
-                        hideLoader();
                     }
                 });
             });
@@ -148,75 +156,33 @@ jQuery(document).ready(function($) {
             post_id = size_box.data('postId');
 
         var currentCrop = size_box.find('.cj_cfi_size__crop.current img');
-        if (currentCrop.length > 0) {
-            var crop_id = currentCrop.data('cropId');
 
-            if (crop_id != 'default') {
-                showLoader();
+        var sendData = {};
 
-                var sendData = {};
+        sendData.action = 'cfi_reset_image';
+        sendData.nonce = button.data('nonce');
+        sendData.size_id = size_id;
+        sendData.post_id = post_id;
 
-                sendData.action = 'cfi_reset_image';
-                sendData.nonce = button.data('nonce');
-                sendData.size_id = size_id;
-                sendData.post_id = post_id;
+        $.post(ajaxurl, sendData, function(data) {
+            if (data.status == 'success') {
+                if (currentCrop.length > 0) {
+                    currentCrop.parent().removeClass('current');
+                }
 
-                $.post(ajaxurl, sendData, function(data) {
-                    if (data.status == 'success') {
-                        currentCrop.parent().removeClass('current');
+                cropsInstances[size_id].reset();
+                var default_image = size_box.data('defaultImage');
 
-                        var defaultCrop = size_box.find('.cj_cfi_size__crop.default img');
-                        if (defaultCrop.length > 0) {
-                            defaultCrop.parent().addClass('current');
-                            size_box.data('attachmentId', defaultCrop.data('attachmentId'));
-                        }
-
-                        cropsInstances[size_id].reset();
-                    } else {
-                        console.log(data);
-                    }
-
-                    hideLoader();
-                }, 'json');
-            }
-        }
-    });
-
-    $('.cj_cfi_size__crops').on('click', '.cj_cfi_size__crop img', function() {
-        var _this = $(this),
-            _crops = _this.closest('.cj_cfi_size__crops');
-
-        if (_this.parent().hasClass('current')) return false;
-
-        var size_box = _this.closest('.cj_cfi_size_box');
-        var size_id = size_box.data('sizeId');
-        var crop_id = _this.data('cropId');
-
-        var original_image = _this.data('originalImage');
-
-        if (crop_id != 'default') {
-            var cropped_image = _this.data('croppedImage');
-            var cropper_data = _this.data('cropperData');
-
-            if (cropsInstances[size_id].url != original_image) {
-                cropsInstances[size_id].replace(original_image);
-                size_box.data('attachmentId', _this.data('attachmentId'));
+                if (cropsInstances[size_id].url != default_image) {
+                    cropsInstances[size_id].replace(default_image);
+                    size_box.data('attachmentId', size_box.data('defaultAttachmentId'));
+                }
+            } else {
+                console.log(data);
             }
 
-            cropsInstances[size_id].setCropBoxData(cropper_data.cropBoxData);
-            cropsInstances[size_id].setCanvasData(cropper_data.canvasData);
-
-        } else {
-            if (cropsInstances[size_id].url != original_image) {
-                cropsInstances[size_id].replace(original_image);
-                size_box.data('attachmentId', _this.data('attachmentId'));
-            }
-
-            cropsInstances[size_id].reset();
-        }
-
-        _crops.find('.current').removeClass('current');
-        _this.parent().addClass('current');
+            hideLoader();
+        }, 'json');
     });
 
     $('.cj_cfi_button__change_image').on('click', function() {
@@ -271,9 +237,8 @@ jQuery(document).ready(function($) {
         var currentCrop = size_box.find('.cj_cfi_size__crop.current img');
         if (currentCrop.length > 0) {
             // If image is cropped, show image
-            viewCropDialog.dialog('option', 'title', cj_cfi.view_crop + ' (' + crop_sizes + ')');
+            viewCropDialog.dialog('option', 'title', cj_cfi.view_crop + ' ' + crop_sizes);
             viewCropDialog.html('<img src="' + currentCrop.attr('src') + '" />');
-            viewCropDialog.dialog('option', 'position', { my: "center", at: "center", of: window });
 
             viewCropDialog.dialog('open');
         } else {
@@ -294,9 +259,8 @@ jQuery(document).ready(function($) {
                 var img = new Image();
                 img.src = cropUrl;
                 img.onload = function() {
-                    viewCropDialog.dialog('option', 'title', cj_cfi.view_crop + ' (' + crop_sizes + ')');
+                    viewCropDialog.dialog('option', 'title', cj_cfi.view_crop + ' ' + crop_sizes);
                     viewCropDialog.html(img);
-                    viewCropDialog.dialog('option', 'position', { my: "center", at: "center", of: window });
 
                     viewCropDialog.dialog('open');
                 }

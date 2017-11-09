@@ -100,46 +100,29 @@
 
 				$post_attachment_id = get_post_thumbnail_id($post_id);
 
-				if ($crop_id != 'default') {
-					$crops_of_attachment = get_post_meta($post_attachment_id, 'cfi_crops', true);
-					if ($crops_of_attachment == false) {
-						$crops_of_attachment = array();
-					}
+				$crops_of_attachment = get_post_meta($post_attachment_id, 'cfi_crops', true);
+				if ($crops_of_attachment == false) {
+					$crops_of_attachment = array();
+				}
 
-					if (isset($crops_of_attachment[$size_id][$crop_id])) {
-						// Update post, update crop for current size
-						$post_meta = get_post_meta($post_id, 'cfi_crops_' . $post_attachment_id, true);
-						if ($post_meta == false) $post_meta = array();
-
-						$post_meta[$size_id] = array(
-							'attachment_id' => $attachment_id,
-							'crop_id' => $crop_id,
-							'original' => $crops_of_attachment[$size_id][$crop_id]['original'],
-							'cropped' => $crops_of_attachment[$size_id][$crop_id]['cropped'],
-						);
-
-						update_post_meta($post_id, 'cfi_crops_' . $post_attachment_id, $post_meta);
-
-						$this->jsonDie(array('status' => 'success'));
-					}
-
-					$this->jsonDie(array('status' => 'no_crop_error'));
-				} else {
+				if (isset($crops_of_attachment[$size_id][$crop_id])) {
+					// Update post, update crop for current size
 					$post_meta = get_post_meta($post_id, 'cfi_crops_' . $post_attachment_id, true);
-					if ($post_meta == false) {
-						$post_meta = array();
-					}
+					if ($post_meta == false) $post_meta = array();
 
-					if (isset($post_meta[$size_id])) {
-						unset($post_meta[$size_id]);
+					$post_meta[$size_id] = array(
+						'attachment_id' => $attachment_id,
+						'crop_id' => $crop_id,
+						'original' => $crops_of_attachment[$size_id][$crop_id]['original'],
+						'cropped' => $crops_of_attachment[$size_id][$crop_id]['cropped'],
+					);
 
-						update_post_meta($post_id, 'cfi_crops_' . $post_attachment_id, $post_meta);
-
-						$this->jsonDie(array('status' => 'success'));
-					}
+					update_post_meta($post_id, 'cfi_crops_' . $post_attachment_id, $post_meta);
 
 					$this->jsonDie(array('status' => 'success'));
 				}
+
+				$this->jsonDie(array('status' => 'no_crop_error'));
 			}
 
 			public function saveCroppedImage() {
@@ -299,9 +282,8 @@
 							if ( $attachment_id != false ) {
 								$sizes = $this->getSizes();
 
-
 								$original_image_src = wp_get_attachment_image_url($attachment_id, 'full');
-								$original_metadata = wp_get_attachment_metadata($attachment_id);
+								//$original_metadata = wp_get_attachment_metadata($attachment_id);
 
 								$crops_of_post = get_post_meta($post_id, 'cfi_crops_' . $attachment_id, true);
 								if ($crops_of_post == false) {
@@ -313,9 +295,7 @@
 									$crops_of_attachment = array();
 								}
 
-								$crops_of_attachment = $this->setDefaultsImagesForSizes($sizes, $original_metadata, $crops_of_attachment, $attachment_id);
 								$crops_of_attachment = $this->setCurrentImagesForPost($sizes, $crops_of_attachment, $crops_of_post);
-
 								$initial_states = $this->getInitialStates($sizes, $crops_of_post, $original_image_src, $attachment_id);
 
 								require( CJ_CFI_DIR . 'templates/crop_page.php' );
@@ -335,58 +315,14 @@
 				foreach ($sizes as $size_name => $size) {
 					if (isset($crops_of_post[$size_name])) {
 						$id_current = $crops_of_post[$size_name]['crop_id'];
-					} else {
-						$id_current = 'default';
-					}
 
-					if (isset($crops_of_attachment[$size_name][$id_current])) {
-						$crops_of_attachment[$size_name][$id_current]['current'] = true;
+						if (isset($crops_of_attachment[$size_name][$id_current])) {
+							$crops_of_attachment[$size_name][$id_current]['current'] = true;
+						}
 					}
 				}
 
 				return $crops_of_attachment;
-			}
-
-			private function setDefaultsImagesForSizes($sizes, $original_metadata, $crops_of_attachment, $attachment_id) {
-				foreach ($sizes as $size_name => $size) {
-					if (!isset($crops_of_attachment[$size_name])) {
-						$crops_of_attachment[$size_name] = array();
-					}
-
-					$default_image = $this->getDefaultImageForSize($original_metadata, $size_name);
-
-					if ($default_image == false) continue;
-
-					$unshift = array(
-						'default' => array(
-							'attachment_id' => $attachment_id,
-							'original' => $default_image['original'],
-							'cropped' => $default_image['crop'],
-							'data' => '',
-							'default' => true
-						)
-					);
-
-					$crops_of_attachment[$size_name] = $unshift + $crops_of_attachment[$size_name];
-				}
-
-				return $crops_of_attachment;
-			}
-
-			private function getDefaultImageForSize($original_metadata, $size_name) {
-				if (!isset($original_metadata['sizes'][$size_name])) {
-					return false;
-				}
-
-				$uploads_dir = wp_upload_dir();
-
-				$src = $uploads_dir['baseurl'] . '/' . $original_metadata['file'];
-				$crop = dirname($src) . '/' . $original_metadata['sizes'][$size_name]['file'];
-
-				return array(
-					'original' => $src,
-					'crop' => $crop
-				);
 			}
 
 			private function getInitialStates($sizes, $crops_of_post, $original_image_src, $attachment_id) {

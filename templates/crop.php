@@ -4,10 +4,6 @@
 	if (isset($crop_data['current'])) {
 		$classes[] = 'current';
 	}
-
-	if (isset($crop_data['default'])) {
-		$classes[] = 'default';
-	}
 ?>
 <div class="cj_cfi_size__crop <?php echo implode(' ', $classes); ?>">
 	<img src="<?=$crop_data['cropped']; ?>"
