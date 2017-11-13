@@ -38,6 +38,8 @@
 
 			private function __construct() {
 				if (is_admin()) {
+					load_plugin_textdomain('cj-cfi', false, basename(dirname(__FILE__)) .'/languages');
+
 					add_action('admin_enqueue_scripts', array($this, 'enqueueScripts'));
 					add_action('admin_menu', array($this, 'adminMenu'));
 
