@@ -54,6 +54,9 @@
 			}
 
 			public function saveAll() {
+				//print_r($_POST);
+				//print_r($_FILES);
+
 				if (!current_user_can('upload_files')) {
 					$this->jsonDie(array('status' => 'capability_error'));
 				}
@@ -375,6 +378,8 @@
 								$crops_of_attachment = $this->setCurrentImagesForPost($sizes, $crops_of_attachment, $crops_of_post);
 								$initial_states = $this->getInitialStates($sizes, $crops_of_post, $original_image_src, $attachment_id);
 
+								$max_file_uploads = $this->getMaxFileUploads();
+
 								require( CJ_CFI_DIR . 'templates/crop_page.php' );
 							} else {
 								require( CJ_CFI_DIR . 'templates/no_thumbnail.php' );
@@ -385,6 +390,15 @@
 					} else {
 						require( CJ_CFI_DIR . 'templates/no_post.php' );
 					}
+				}
+			}
+
+			private function getMaxFileUploads() {
+				$max_file_uploads = intval(ini_get('max_file_uploads'));
+				if ($max_file_uploads != false) {
+					return $max_file_uploads;
+				} else {
+					return 20;
 				}
 			}
 

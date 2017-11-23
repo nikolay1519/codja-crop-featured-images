@@ -3,7 +3,10 @@
 
 	<a href="<?php echo $edit_post_link; ?>" class="button"><?php _e('← Go back to post', 'cj-cfi'); ?></a>
 
-	<span class="button" id="cj_cfi_button__save_all" data-nonce="<?php echo wp_create_nonce('save_all_' . $post_id); ?>" data-post-id="<?php echo $post_id; ?>"><?php _e('Save all', 'cj-cfi'); ?></span>
+	<span class="button" id="cj_cfi_button__save_all"
+		  data-nonce="<?php echo wp_create_nonce('save_all_' . $post_id); ?>"
+		  data-post-id="<?php echo $post_id; ?>"
+		  data-max-uploads="<?php echo $max_file_uploads; ?>"><?php _e('Save all', 'cj-cfi'); ?></span>
 
 	<div class="cj_cfi_sizes">
 		<?php foreach ($sizes as $name => $size) { ?>

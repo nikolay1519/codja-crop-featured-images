@@ -272,7 +272,8 @@ jQuery(document).ready(function($) {
 
     $('#cj_cfi_button__save_all').on('click', function() {
         var button = $(this),
-            crop_boxes = $('.cj_cfi_size_box');
+            crop_boxes = $('.cj_cfi_size_box'),
+            max_uploads = button.data('maxUploads');
 
         if (crop_boxes.length > 0) {
             showLoader();
@@ -285,6 +286,7 @@ jQuery(document).ready(function($) {
 
             var cropCount = 0;
             var cropReady = 0;
+            var blobs = [];
 
             crop_boxes.each(function(index, element) {
                 var size_box = $(element),
@@ -308,47 +310,100 @@ jQuery(document).ready(function($) {
                         imageSmoothingEnabled: true,
                         imageSmoothingQuality: 'high'
                     }).toBlob(function (blob) {
-                        var tmp = {};
+                        var json_tmp = {},
+                            tmp = {};
 
-                        tmp.cropBoxData = cropsInstances[size_id].getCropBoxData();
-                        tmp.canvasData = cropsInstances[size_id].getCanvasData();
+                        json_tmp.cropBoxData = cropsInstances[size_id].getCropBoxData();
+                        json_tmp.canvasData = cropsInstances[size_id].getCanvasData();
 
-                        formData.append('crop[' + size_id + '][attachment_id]', size_box.data('attachmentId'));
-                        formData.append('croppedImage_' + size_id, blob);
-                        formData.append('crop[' + size_id + '][croppedData]', JSON.stringify(tmp));
+                        tmp.size_id = size_id;
+                        tmp.attachment_id = size_box.data('attachmentId');
+                        tmp.croppedData = JSON.stringify(json_tmp);
+                        tmp.blob = blob;
 
-                        cropReady++;
+                        blobs.push(tmp);
+
+                        cropReady++
                     });
                 }
             });
 
+
+            // Wait generate all blobs, check every seconds
             var waitCrop = setInterval(function() {
                 if (cropCount == cropReady) {
                     clearInterval(waitCrop);
-                    $.ajax(ajaxurl, {
-                        method: 'POST',
-                        data: formData,
-                        processData: false,
-                        contentType: false,
-                        dataType: 'json',
-                        success: function (data) {
-                            if (data.status == 'success') {
-                                // Check if exist data.crop
-                                if (data.crop) {
-                                    // Look each property
-                                    for (var size_id in data.crop) {
-                                        if (data.crop[size_id].status == 'success') {
-                                            $('#cj_cfi_size_box_' + size_id).find('.cj_cfi_size__crops').append(data.crop[size_id].template);
-                                        }
-                                    }
-                                }
-                            } else {
-                                console.log(data);
+
+                    // Calculate count of needed queries
+                    var queries_count = Math.ceil(cropCount / max_uploads);
+                    var queries_sended_count = 0;
+                    var queries_recived_count = 0;
+
+                    if (queries_count == 0) {
+                        queries_count = 1;
+                    }
+
+                    for (var i = 1; i <= queries_count; i++) {
+                        // Reset formData, if this is not first query
+                        if (i != 1) {
+                            formData = new FormData();
+                            formData.append('action', 'cfi_save_all');
+                            formData.append('nonce', button.data('nonce'));
+                            formData.append('post_id', button.data('postId'));
+                        }
+
+                        // Append max_uploads blobs, if blobs exist
+                        if (blobs.length != 0) {
+                            var from = i * max_uploads - max_uploads;
+                            var to = i * max_uploads;
+
+                            if (to > blobs.length) {
+                                to = blobs.length;
                             }
 
+                            for (var j = from; j < to; j++) {
+                                formData.append('crop[' + blobs[j].size_id + '][attachment_id]', blobs[j].attachment_id);
+                                formData.append('crop[' + blobs[j].size_id + '][croppedData]', blobs[j].croppedData);
+                                formData.append('croppedImage_' + blobs[j].size_id, blobs[j].blob);
+                            }
+                        }
+
+                        $.ajax(ajaxurl, {
+                            method: 'POST',
+                            data: formData,
+                            processData: false,
+                            contentType: false,
+                            dataType: 'json',
+                            beforeSend: function() {
+                                queries_sended_count++;
+                            },
+                            complete: function() {
+                                queries_recived_count++;
+                            },
+                            success: function (data) {
+                                if (data.status == 'success') {
+                                    // Check if exist data.crop
+                                    if (data.crop) {
+                                        // Look each property
+                                        for (var size_id in data.crop) {
+                                            if (data.crop[size_id].status == 'success') {
+                                                $('#cj_cfi_size_box_' + size_id).find('.cj_cfi_size__crops').append(data.crop[size_id].template);
+                                            }
+                                        }
+                                    }
+                                } else {
+                                    console.log(data);
+                                }
+                            }
+                        });
+                    }
+
+                    // Wait complete all ajax queries
+                    waitCrop = setInterval(function() {
+                        if (queries_sended_count == queries_recived_count) {
                             hideLoader();
                         }
-                    });
+                    }, 1000);
                 }
             }, 1000);
         }
