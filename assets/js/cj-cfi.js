@@ -333,8 +333,6 @@ jQuery(document).ready(function($) {
                         dataType: 'json',
                         success: function (data) {
                             if (data.status == 'success') {
-                                console.log(data);
-
                                 // Check if exist data.crop
                                 if (data.crop) {
                                     // Look each property
@@ -351,8 +349,6 @@ jQuery(document).ready(function($) {
                             hideLoader();
                         }
                     });
-                } else {
-                    console.log('wait: ' + cropCount + ' - ' + cropReady);
                 }
             }, 1000);
         }
