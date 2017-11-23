@@ -49,13 +49,75 @@
 					add_action('wp_ajax_cfi_save_cropped_image', array($this, 'saveCroppedImage'));
 					add_action('wp_ajax_cfi_save_image', array($this, 'saveImage'));
 					add_action('wp_ajax_cfi_reset_image', array($this, 'resetImage'));
+					add_action('wp_ajax_cfi_save_all', array($this, 'saveAll'));
 				}
+			}
+
+			public function saveAll() {
+				if (!current_user_can('upload_files')) {
+					$this->jsonDie(array('status' => 'capability_error'));
+				}
+
+				$post_id = isset($_POST['post_id']) ? intval($_POST['post_id']) : 0;
+				if (!wp_verify_nonce($_POST['nonce'], 'save_all_' . $post_id)) {
+					$this->jsonDie(array('status' => 'nonce_error'));
+				}
+
+				$return = array();
+
+				// Save existing crops first
+				if (isset($_POST['save'])) {
+					$return['save'] = array();
+
+					foreach ($_POST['save'] as $size_id => $data) {
+						$return['save'][$size_id] = array();
+
+						$crop_id = isset($data['crop_id']) ? sanitize_text_field($data['crop_id']) : '';
+						$attachment_id = isset($data['attachment_id']) ? intval($data['attachment_id']) : 0;
+
+						$result = $this->saveExistingCrop($post_id, $size_id, $crop_id, $attachment_id);
+
+						$return['save'][$size_id] = $result;
+					}
+				}
+
+				// Save new crops
+				if (isset($_POST['crop'])) {
+					$return['crop'] = array();
+
+					foreach ($_POST['crop'] as $size_id => $data) {
+						$return['crop'][$size_id] = array();
+
+						$attachment_id = isset($data['attachment_id']) ? intval($data['attachment_id']) : 0;
+						$jsonOptions = isset($data['croppedData']) ? sanitize_text_field($data['croppedData']) : false;
+
+						// Check if json data is valid
+						$jsonOptionsObj = json_decode(stripslashes($jsonOptions));
+						if ($jsonOptionsObj == false) {
+							$return['crop'][$size_id]['status'] = 'cropped_data_error';
+							continue;
+						}
+
+						if (empty($_FILES) || !isset($_FILES['croppedImage_' . $size_id])) {
+							$return['crop'][$size_id]['status'] = 'image_error';
+							continue;
+						}
+
+						$result = $this->saveNewCrop($post_id, $size_id, $attachment_id, $jsonOptions, $_FILES['croppedImage_' . $size_id]);
+
+						$return['crop'][$size_id] = $result;
+					}
+				}
+
+				$return['status'] = 'success';
+
+				$this->jsonDie($return);
 			}
 
 			public function resetImage() {
 				if (!current_user_can('upload_files')) {
 					$this->jsonDie(array('status' => 'capability_error'));
-				};
+				}
 
 				$post_id = isset($_POST['post_id']) ? intval($_POST['post_id']) : 0;
 				$size_id = isset($_POST['size_id']) ? sanitize_key($_POST['size_id']) : '';
@@ -85,7 +147,7 @@
 			public function saveImage() {
 				if (!current_user_can('upload_files')) {
 					$this->jsonDie(array('status' => 'capability_error'));
-				};
+				}
 
 				$post_id = isset($_POST['post_id']) ? intval($_POST['post_id']) : 0;
 				$size_id = isset($_POST['size_id']) ? sanitize_key($_POST['size_id']) : '';
@@ -100,6 +162,12 @@
 					$this->jsonDie(array('status' => 'crop_id_error'));
 				}
 
+				$result = $this->saveExistingCrop($post_id, $size_id, $crop_id, $attachment_id);
+
+				$this->jsonDie($result);
+			}
+
+			private function saveExistingCrop($post_id, $size_id, $crop_id, $attachment_id) {
 				$post_attachment_id = get_post_thumbnail_id($post_id);
 
 				$crops_of_attachment = get_post_meta($post_attachment_id, 'cfi_crops', true);
@@ -121,16 +189,16 @@
 
 					update_post_meta($post_id, 'cfi_crops_' . $post_attachment_id, $post_meta);
 
-					$this->jsonDie(array('status' => 'success'));
+					return array('status' => 'success');
 				}
 
-				$this->jsonDie(array('status' => 'no_crop_error'));
+				return array('status' => 'no_crop_error');
 			}
 
 			public function saveCroppedImage() {
 				if (!current_user_can('upload_files')) {
 					$this->jsonDie(array('status' => 'capability_error'));
-				};
+				}
 
 				$post_id = isset($_POST['post_id']) ? intval($_POST['post_id']) : 0;
 				$size_id = isset($_POST['size_id']) ? sanitize_key($_POST['size_id']) : '';
@@ -152,6 +220,12 @@
 					$this->jsonDie(array('status' => 'image_error'));
 				}
 
+				$result = $this->saveNewCrop($post_id, $size_id, $attachment_id, $jsonOptions, $_FILES['croppedImage']);
+
+				$this->jsonDie($result);
+			}
+
+			private function saveNewCrop($post_id, $size_id, $attachment_id, $jsonOptions, $_file) {
 				$post_attachment_id = get_post_thumbnail_id($post_id);
 				$original_image_src = wp_get_attachment_image_url($attachment_id, 'full');
 
@@ -166,14 +240,15 @@
 
 				$filename = basename($original_image_src);
 				$filetype = wp_check_filetype($filename);
-				$filename = basename($filename, '.'.$filetype['ext']) . '_' . time() . '.png';
+				//$filename = basename($filename, '.'.$filetype['ext']) . '_' . time() . '.png';
+				$filename = basename($filename, '.'.$filetype['ext']) . '_' . $crop_id . '.png';
 
 				if (!file_exists($path)) mkdir($path, 0755, true);
 
 				$image_path = $path . '/' . $filename;
 				$image_url = $uploads_dir['baseurl'] . '/cfi/' .  $post_attachment_id . '/' . $filename;
 
-				if (move_uploaded_file($_FILES['croppedImage']['tmp_name'], $image_path)) {
+				if (move_uploaded_file($_file['tmp_name'], $image_path)) {
 					// Update post, update crop for current size
 					$post_meta = get_post_meta($post_id, 'cfi_crops_' . $post_attachment_id, true);
 					if ($post_meta == false) $post_meta = array();
@@ -219,9 +294,9 @@
 					require( CJ_CFI_DIR . 'templates/crop.php' );
 					$content = ob_get_clean();
 
-					$this->jsonDie(array('status' => 'success', 'template' => $content));
+					return array('status' => 'success', 'template' => $content);
 				} else {
-					$this->jsonDie(array('status' => 'move_uploaded_file_error'));
+					return array('status' => 'move_uploaded_file_error');
 				}
 			}
 

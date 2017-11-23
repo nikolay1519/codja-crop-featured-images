@@ -1,7 +1,9 @@
 <div id="cjCfi_page" class="wrap">
 	<h1><?php _e('Crop image for post ID:', 'cj-cfi'); ?> <?php echo $post_id; ?></h1>
 
-	<a href="<?php echo $edit_post_link; ?>" class="button"><?php _e('← Go back to post'); ?></a>
+	<a href="<?php echo $edit_post_link; ?>" class="button"><?php _e('← Go back to post', 'cj-cfi'); ?></a>
+
+	<span class="button" id="cj_cfi_button__save_all" data-nonce="<?php echo wp_create_nonce('save_all_' . $post_id); ?>" data-post-id="<?php echo $post_id; ?>"><?php _e('Save all', 'cj-cfi'); ?></span>
 
 	<div class="cj_cfi_sizes">
 		<?php foreach ($sizes as $name => $size) { ?>
@@ -35,7 +37,7 @@
 				<div class="cj_cfi_size_box__footer__head"><?php _e('Old crops for that image for other posts (use it to save space)', 'cj-cfi'); ?></div>
 				<div class="cj_cfi_size__crops clear">
 					<?php
-						if ($crops_of_attachment[$name] != false) {
+						if (isset($crops_of_attachment[$name]) && $crops_of_attachment[$name] != false) {
 							foreach ($crops_of_attachment[$name] as $crop_id => $crop_data) {
 								require( CJ_CFI_DIR . 'templates/crop.php' );
 							}

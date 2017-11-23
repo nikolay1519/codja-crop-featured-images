@@ -26,7 +26,8 @@ jQuery(document).ready(function($) {
             viewMode: 2,
             zoomable: false,
             movable: false,
-            dragMode: 'move'
+            dragMode: 'move',
+            autoCropArea: 1
         };
 
         if (size_width != 9999 && size_height != 9999) {
@@ -267,6 +268,95 @@ jQuery(document).ready(function($) {
 
             });
         }
+    });
+
+    $('#cj_cfi_button__save_all').on('click', function() {
+        var button = $(this),
+            crop_boxes = $('.cj_cfi_size_box');
+
+        if (crop_boxes.length > 0) {
+            showLoader();
+
+            var formData = new FormData();
+
+            formData.append('action', 'cfi_save_all');
+            formData.append('nonce', button.data('nonce'));
+            formData.append('post_id', button.data('postId'));
+
+            var cropCount = 0;
+            var cropReady = 0;
+
+            crop_boxes.each(function(index, element) {
+                var size_box = $(element),
+                    size_id = size_box.data('sizeId'),
+                    post_id = size_box.data('postId'),
+                    size_width = size_box.data('sizeWidth'),
+                    size_height = size_box.data('sizeHeight');
+
+                var currentCrop = size_box.find('.cj_cfi_size__crop.current img');
+                if (currentCrop.length > 0) {
+                    formData.append('save[' + size_id + '][crop_id]', currentCrop.data('cropId'));
+                    formData.append('save[' + size_id + '][attachment_id]', size_box.data('attachmentId'));
+                } else {
+                    cropCount++;
+                    cropsInstances[size_id].getCroppedCanvas({
+                        width: size_width,
+                        height: size_height,
+                        minWidth: 50,
+                        minHeight: 50,
+                        fillColor: '#fff',
+                        imageSmoothingEnabled: true,
+                        imageSmoothingQuality: 'high'
+                    }).toBlob(function (blob) {
+                        var tmp = {};
+
+                        tmp.cropBoxData = cropsInstances[size_id].getCropBoxData();
+                        tmp.canvasData = cropsInstances[size_id].getCanvasData();
+
+                        formData.append('crop[' + size_id + '][attachment_id]', size_box.data('attachmentId'));
+                        formData.append('croppedImage_' + size_id, blob);
+                        formData.append('crop[' + size_id + '][croppedData]', JSON.stringify(tmp));
+
+                        cropReady++;
+                    });
+                }
+            });
+
+            var waitCrop = setInterval(function() {
+                if (cropCount == cropReady) {
+                    clearInterval(waitCrop);
+                    $.ajax(ajaxurl, {
+                        method: 'POST',
+                        data: formData,
+                        processData: false,
+                        contentType: false,
+                        dataType: 'json',
+                        success: function (data) {
+                            if (data.status == 'success') {
+                                console.log(data);
+
+                                // Check if exist data.crop
+                                if (data.crop) {
+                                    // Look each property
+                                    for (var size_id in data.crop) {
+                                        if (data.crop[size_id].status == 'success') {
+                                            $('#cj_cfi_size_box_' + size_id).find('.cj_cfi_size__crops').append(data.crop[size_id].template);
+                                        }
+                                    }
+                                }
+                            } else {
+                                console.log(data);
+                            }
+
+                            hideLoader();
+                        }
+                    });
+                } else {
+                    console.log('wait: ' + cropCount + ' - ' + cropReady);
+                }
+            }, 1000);
+        }
+
     });
 
     function showLoader() {

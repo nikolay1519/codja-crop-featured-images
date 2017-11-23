@@ -1,18 +1,18 @@
 msgid ""
 msgstr ""
-"Project-Id-Version: CODJA Crop Featured Images 1.0.0\n"
-"POT-Creation-Date: 2017-11-09 15:32+0200\n"
+"Project-Id-Version: CODJA Crop Featured Images\n"
+"POT-Creation-Date: 2017-11-23 18:21+0200\n"
 "PO-Revision-Date: 2017-11-09 15:32+0200\n"
 "Last-Translator: kaliyan <nikolay1519@gmail.com>\n"
 "MIME-Version: 1.0\n"
 "Content-Type: text/plain; charset=UTF-8\n"
 "Content-Transfer-Encoding: 8bit\n"
 
-#: codja-crop-featured-images.php:269 templates/crop_page.php:21
+#: codja-crop-featured-images.php:330 templates/crop_page.php:25
 msgid "View Crop"
 msgstr ""
 
-#: codja-crop-featured-images.php:277 codja-crop-featured-images.php:278
+#: codja-crop-featured-images.php:338 codja-crop-featured-images.php:339
 #: templates/no_post.php:2 templates/no_post_id.php:2
 #: templates/no_thumbnail.php:2 templates/not_support_thumbnails.php:2
 msgid "Crop Featured Images"
@@ -26,23 +26,27 @@ msgstr ""
 msgid "← Go back to post"
 msgstr ""
 
-#: templates/crop_page.php:15
+#: templates/crop_page.php:6
+msgid "Save all"
+msgstr ""
+
+#: templates/crop_page.php:19
 msgid "Size:"
 msgstr ""
 
-#: templates/crop_page.php:22
+#: templates/crop_page.php:26
 msgid "Change Image"
 msgstr ""
 
-#: templates/crop_page.php:23
+#: templates/crop_page.php:27
 msgid "Save"
 msgstr ""
 
-#: templates/crop_page.php:24
+#: templates/crop_page.php:28
 msgid "Reset"
 msgstr ""
 
-#: templates/crop_page.php:33
+#: templates/crop_page.php:37
 msgid "Old crops for that image for other posts (use it to save space)"
 msgstr ""
 
